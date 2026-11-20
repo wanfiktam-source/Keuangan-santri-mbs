@@ -197,10 +197,12 @@
             </div>
 <!-- Chip Nominal Cepat -->
 <div class="flex flex-wrap items-center gap-1.5 mt-2">
-  <button type="button" onclick="addQuickAmount(10000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-teal-100 hover:text-teal-800 text-slate-700 text-xs font-bold transition">+10rb</button>
-  <button type="button" onclick="addQuickAmount(20000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-teal-100 hover:text-teal-800 text-slate-700 text-xs font-bold transition">+20rb</button>
-  <button type="button" onclick="addQuickAmount(50000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-teal-100 hover:text-teal-800 text-slate-700 text-xs font-bold transition">+50rb</button>
-  <button type="button" onclick="addQuickAmount(100000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-teal-100 hover:text-teal-800 text-slate-700 text-xs font-bold transition">+100rb</button>
+  <button type="button" onclick="addQuickAmount(5000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-teal-100 hover:text-teal-800 active:bg-teal-200 text-slate-700 text-xs font-bold transition">+5rb</button>
+  <button type="button" onclick="addQuickAmount(10000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-teal-100 hover:text-teal-800 active:bg-teal-200 text-slate-700 text-xs font-bold transition">+10rb</button>
+  <button type="button" onclick="addQuickAmount(20000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-teal-100 hover:text-teal-800 active:bg-teal-200 text-slate-700 text-xs font-bold transition">+20rb</button>
+  <button type="button" onclick="addQuickAmount(50000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-teal-100 hover:text-teal-800 active:bg-teal-200 text-slate-700 text-xs font-bold transition">+50rb</button>
+  <button type="button" onclick="addQuickAmount(100000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-teal-100 hover:text-teal-800 active:bg-teal-200 text-slate-700 text-xs font-bold transition">+100rb</button>
+  <button type="button" onclick="resetQuickAmount()" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-teal-100 hover:text-teal-800 active:bg-teal-200 text-slate-500 text-xs font-semibold transition" title="Kosongkan nominal">Reset</button>
 </div>
             
             <div>
@@ -1462,13 +1464,28 @@
       initCloudSync(cloudConfig, false);
     }
     function addQuickAmount(nominal) {
-  const input = document.getElementById("amount");
-  if (!input) return;
-  const current = parseFloat(input.value) || 0;
-  input.value = current + nominal;
-  input.dispatchEvent(new Event("input", { bubbles: true }));
-  input.focus();
-    }
+  const amountInput = document.getElementById("amount");
+  if (!amountInput) return;
+
+  const currentValue = parseFloat(amountInput.value) || 0;
+  const nextValue = currentValue + Number(nominal);
+
+  amountInput.value = nextValue;
+  amountInput.dispatchEvent(new Event("input", { bubbles: true }));
+  amountInput.dispatchEvent(new Event("change", { bubbles: true }));
+  amountInput.focus();
+}
+
+function resetQuickAmount() {
+  const amountInput = document.getElementById("amount");
+  if (!amountInput) return;
+
+  amountInput.value = "";
+  amountInput.dispatchEvent(new Event("input", { bubbles: true }));
+  amountInput.dispatchEvent(new Event("change", { bubbles: true }));
+  amountInput.focus();
+}
+
   </script>
 </body>
 </html>
