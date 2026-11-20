@@ -1472,6 +1472,15 @@
   input.dispatchEvent(new Event("change", { bubbles: true }));
   input.focus();
       }
+    function resetQuickAmount() {
+  const amountInput = document.getElementById("txAmount");
+  if (!amountInput) return;
+
+  amountInput.value = "";
+  amountInput.dispatchEvent(new Event("input", { bubbles: true }));
+  amountInput.dispatchEvent(new Event("change", { bubbles: true }));
+  amountInput.focus();
+}
     window.addQuickAmount = addQuickAmount;
     
   </script>
