@@ -525,10 +525,12 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
     </div>
   </div>
 
-  <!-- Firebase Modular SDK + Logika Utama Aplikasi -->
-  <script type="module">
-    import { initializeApp, getApps, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, update, remove, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+<!-- Google Sheets Sync + Logika Utama Aplikasi -->
+  <script>
+    // Opsional: Isi URL Web App Google Apps Script di bawah ini jika ingin otomatis terhubung tanpa input lewat modal
+    const DEFAULT_SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzVXlxn1LxjaypqD8c3L0Ze6pAdaz1TGEAFXOmHPbLsKXJK7jgJ9RNc1KbTyK-Qy8eBVQ/exec";
+    const DEFAULT_ROOM_ID = "default-pondok";
+    const SYNC_INTERVAL_MS = 5000; // Auto-sync tiap 5 detik
 
     // ==================== STATE & DATA ====================
     const DEFAULT_SANTRI = [
@@ -552,13 +554,17 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
     let dropdownMatches = [];
     let dropdownActiveIndex = -1;
 
-    // Cloud Sync State
-    let cloudConfig = JSON.parse(localStorage.getItem('santri_cloud_cfg')) || null;
-    let firebaseAppInstance = null;
-    let dbInstance = null;
+    // Cloud Sync State (Google Sheets)
+    let cloudConfig = JSON.parse(localStorage.getItem('santri_cloud_cfg')) || (
+      DEFAULT_SHEETS_WEBAPP_URL
+        ? { roomId: DEFAULT_ROOM_ID, databaseURL: DEFAULT_SHEETS_WEBAPP_URL }
+        : null
+    );
     let isCloudConnected = false;
-    let unsubscribeSantri = null;
-    let unsubscribeTx = null;
+    let syncTimer = null;
+    let activeWrites = 0;
+    let mutationVersion = 0;
+    let lastSyncedHash = '';
 
     // ==================== FORMATTERS & HELPERS ====================
     function escapeHtml(str) {
@@ -643,13 +649,12 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
     async function syncFullStateToCloudIfConnected() {
       saveLocalCache();
       render();
-      if (isCloudConnected && dbInstance && cloudConfig) {
-        const roomPath = `keuangan_santri/${sanitizeRoomId(cloudConfig.roomId)}`;
-        const santriObj = {};
-        const txObj = {};
-        santriList.forEach(s => { santriObj[s.id] = s; });
-        txList.forEach(t => { txObj[t.id] = t; });
-        await set(ref(dbInstance, roomPath), { santri: santriObj, tx: txObj });
+      if (cloudConfig && cloudConfig.databaseURL) {
+        await sendToSheets({
+          action: 'syncAll',
+          santri: santriList,
+          tx: txList
+        });
       }
     }
 
@@ -810,7 +815,7 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
       renderTxTable();
     }
 
-    // ==================== CLOUD SYNC ENGINE ====================
+    // ==================== GOOGLE SHEETS CLOUD SYNC ENGINE ====================
     function setCloudUIState(status, text) {
       const dot = document.getElementById('cloudStatusDot');
       const lbl = document.getElementById('cloudStatusText');
@@ -827,7 +832,7 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
         dot.className = 'w-2 h-2 rounded-full bg-emerald-400 dot-live';
         modalLbl.className = 'px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold';
         syncBar.classList.remove('hidden');
-        document.getElementById('lblActiveRoom').innerText = cloudConfig?.roomId || '-';
+        document.getElementById('lblActiveRoom').innerText = cloudConfig?.roomId || 'default-pondok';
         btnPush.classList.remove('hidden');
         btnCopy.classList.remove('hidden');
         btnDisc.classList.remove('hidden');
@@ -854,195 +859,203 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
       return String(raw || 'default-pondok').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '-');
     }
 
+    async function sendToSheets(payload) {
+      if (!cloudConfig || !cloudConfig.databaseURL) return null;
+      mutationVersion++;
+      activeWrites++;
+      try {
+        const res = await fetch(cloudConfig.databaseURL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            ...payload,
+            roomId: sanitizeRoomId(cloudConfig.roomId)
+          })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+          isCloudConnected = true;
+          setCloudUIState('live', 'Sheets Sync Live');
+          document.getElementById('lblLastSync').innerText =
+            'Update: ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          lastSyncedHash = JSON.stringify({ santri: santriList, tx: txList });
+        } else {
+          console.error('Sheets Error:', json.message);
+          setCloudUIState('error', 'Error Sheets');
+        }
+        return json;
+      } catch (err) {
+        console.error('Sheets Network Error:', err);
+        isCloudConnected = false;
+        setCloudUIState('error', 'Gagal Terhubung');
+        return null;
+      } finally {
+        activeWrites = Math.max(0, activeWrites - 1);
+      }
+    }
+
+    async function pullFromSheets(isInitialConnect = false) {
+      if (!cloudConfig || !cloudConfig.databaseURL) return;
+      if (activeWrites > 0) return;
+
+      const startGen = mutationVersion;
+      const roomId = sanitizeRoomId(cloudConfig.roomId);
+      const url = `${cloudConfig.databaseURL}?roomId=${encodeURIComponent(roomId)}&_t=${Date.now()}`;
+
+      try {
+        const res = await fetch(url);
+        const json = await res.json();
+
+        // Abaikan respons jika ada perubahan lokal yang sedang berjalan
+        if (activeWrites > 0 || startGen !== mutationVersion) return;
+
+        if (json.status === 'success') {
+          isCloudConnected = true;
+          setCloudUIState('live', 'Sheets Sync Live');
+          document.getElementById('lblLastSync').innerText =
+            'Update: ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+          const remoteSantri = Array.isArray(json.santri) ? json.santri.map(item => ({
+            id: Number(item.id),
+            name: String(item.name || ''),
+            initial: Number(item.initial || 0)
+          })) : [];
+
+          const remoteTx = Array.isArray(json.tx) ? json.tx.map(item => ({
+            id: Number(item.id),
+            date: String(item.date),
+            santriId: Number(item.santriId),
+            account: String(item.account),
+            type: String(item.type),
+            amount: Number(item.amount),
+            note: String(item.note || '')
+          })).sort((a, b) => new Date(b.date) - new Date(a.date)) : [];
+
+          // Jika baru pertama konek dan sheet masih kosong, unggah data lokal otomatis
+          if (isInitialConnect && remoteSantri.length === 0 && remoteTx.length === 0 && santriList.length > 0) {
+            await pushLocalDataToCloud(true);
+            return;
+          }
+
+          const newHash = JSON.stringify({ santri: remoteSantri, tx: remoteTx });
+          if (newHash !== lastSyncedHash) {
+            lastSyncedHash = newHash;
+            santriList = remoteSantri;
+            txList = remoteTx;
+            saveLocalCache();
+            render();
+          }
+        } else {
+          isCloudConnected = false;
+          setCloudUIState('error', 'Gagal Sync (Cek Web App)');
+        }
+      } catch (err) {
+        console.error('Sheets Pull Error:', err);
+        isCloudConnected = false;
+        setCloudUIState('error', 'Gagal Sync (Cek URL)');
+      }
+    }
+
     async function initCloudSync(cfg, isInitialConnect = false) {
-      if (!cfg || !cfg.databaseURL || !cfg.apiKey) {
+      if (!cfg || !cfg.databaseURL) {
         setCloudUIState('offline', 'Mode Lokal');
         return;
       }
 
-      try {
-        setCloudUIState('connecting', 'Menghubungkan...');
-
-        if (unsubscribeSantri) { unsubscribeSantri(); unsubscribeSantri = null; }
-        if (unsubscribeTx) { unsubscribeTx(); unsubscribeTx = null; }
-        for (const app of getApps()) {
-          await deleteApp(app);
-        }
-
-        firebaseAppInstance = initializeApp({
-          apiKey: cfg.apiKey,
-          databaseURL: cfg.databaseURL,
-          projectId: cfg.projectId || undefined,
-          authDomain: cfg.authDomain || undefined,
-          appId: cfg.appId || undefined
-        });
-
-        dbInstance = getDatabase(firebaseAppInstance);
-        const roomPath = `keuangan_santri/${sanitizeRoomId(cfg.roomId)}`;
-        const santriRef = ref(dbInstance, `${roomPath}/santri`);
-        const txRef = ref(dbInstance, `${roomPath}/tx`);
-
-        if (isInitialConnect) {
-          const snap = await get(santriRef);
-          if (!snap.exists() && santriList.length > 0) {
-            await pushLocalDataToCloud(true);
-          }
-        }
-
-        unsubscribeSantri = onValue(santriRef, (snapshot) => {
-          isCloudConnected = true;
-          setCloudUIState('live', 'Cloud Sync Live');
-          document.getElementById('lblLastSync').innerText =
-            'Update: ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-          const val = snapshot.val();
-          if (val) {
-            santriList = Object.values(val).map(item => ({
-              id: Number(item.id),
-              name: String(item.name || ''),
-              initial: Number(item.initial || 0)
-            }));
-          } else {
-            santriList = [];
-          }
-          saveLocalCache();
-          render();
-        }, (err) => {
-          console.error('Firebase Santri Sync Error:', err);
-          isCloudConnected = false;
-          setCloudUIState('error', 'Gagal Sync (Cek Rules/URL)');
-        });
-
-        unsubscribeTx = onValue(txRef, (snapshot) => {
-          const val = snapshot.val();
-          if (val) {
-            txList = Object.values(val)
-              .map(item => ({
-                id: Number(item.id),
-                date: String(item.date),
-                santriId: Number(item.santriId),
-                account: String(item.account),
-                type: String(item.type),
-                amount: Number(item.amount),
-                note: String(item.note || '')
-              }))
-              .sort((a, b) => new Date(b.date) - new Date(a.date));
-          } else {
-            txList = [];
-          }
-          saveLocalCache();
-          render();
-        });
-
-      } catch (err) {
-        console.error(err);
-        isCloudConnected = false;
-        setCloudUIState('error', 'Konfigurasi Tidak Valid');
+      if (syncTimer) {
+        clearInterval(syncTimer);
+        syncTimer = null;
       }
+
+      setCloudUIState('connecting', 'Menghubungkan...');
+      await pullFromSheets(isInitialConnect);
+
+      syncTimer = setInterval(() => {
+        if (!document.hidden && cloudConfig && cloudConfig.databaseURL) {
+          pullFromSheets(false);
+        }
+      }, SYNC_INTERVAL_MS);
     }
 
     async function cloudUpsertSantri(santriObj) {
-      if (isCloudConnected && dbInstance && cloudConfig) {
-        const roomPath = `keuangan_santri/${sanitizeRoomId(cloudConfig.roomId)}`;
-        await set(ref(dbInstance, `${roomPath}/santri/${santriObj.id}`), santriObj);
-      } else {
-        saveLocalCache();
-        render();
+      saveLocalCache();
+      render();
+      if (cloudConfig && cloudConfig.databaseURL) {
+        await sendToSheets({ action: 'upsertSantri', data: santriObj });
       }
     }
 
     async function cloudDeleteSantri(santriId, relatedTxIds) {
-      if (isCloudConnected && dbInstance && cloudConfig) {
-        const roomPath = `keuangan_santri/${sanitizeRoomId(cloudConfig.roomId)}`;
-        const updates = {};
-        updates[`${roomPath}/santri/${santriId}`] = null;
-        relatedTxIds.forEach(tid => {
-          updates[`${roomPath}/tx/${tid}`] = null;
-        });
-        await update(ref(dbInstance), updates);
-      } else {
-        saveLocalCache();
-        render();
+      saveLocalCache();
+      render();
+      if (cloudConfig && cloudConfig.databaseURL) {
+        await sendToSheets({ action: 'deleteSantri', santriId, relatedTxIds });
       }
     }
 
     async function cloudAddTxBatch(txArray) {
-      if (isCloudConnected && dbInstance && cloudConfig) {
-        const roomPath = `keuangan_santri/${sanitizeRoomId(cloudConfig.roomId)}`;
-        const updates = {};
-        txArray.forEach(t => {
-          updates[`${roomPath}/tx/${t.id}`] = t;
-        });
-        await update(ref(dbInstance), updates);
-      } else {
-        saveLocalCache();
-        render();
+      saveLocalCache();
+      render();
+      if (cloudConfig && cloudConfig.databaseURL) {
+        await sendToSheets({ action: 'addTxBatch', data: txArray });
       }
     }
 
     async function cloudDeleteTx(txId) {
-      if (isCloudConnected && dbInstance && cloudConfig) {
-        const roomPath = `keuangan_santri/${sanitizeRoomId(cloudConfig.roomId)}`;
-        await remove(ref(dbInstance, `${roomPath}/tx/${txId}`));
-      } else {
-        saveLocalCache();
-        render();
+      saveLocalCache();
+      render();
+      if (cloudConfig && cloudConfig.databaseURL) {
+        await sendToSheets({ action: 'deleteTx', txId });
       }
     }
 
     async function cloudClearAllTx() {
-      if (isCloudConnected && dbInstance && cloudConfig) {
-        const roomPath = `keuangan_santri/${sanitizeRoomId(cloudConfig.roomId)}`;
-        await set(ref(dbInstance, `${roomPath}/tx`), null);
-      } else {
-        saveLocalCache();
-        render();
+      saveLocalCache();
+      render();
+      if (cloudConfig && cloudConfig.databaseURL) {
+        await sendToSheets({ action: 'clearAllTx' });
       }
     }
 
     async function pushLocalDataToCloud(silent = false) {
-      if (!dbInstance || !cloudConfig) {
-        alert('Hubungkan konfigurasi Cloud terlebih dahulu.');
+      if (!cloudConfig || !cloudConfig.databaseURL) {
+        alert('Hubungkan URL Web App Google Sheets terlebih dahulu.');
         return;
       }
-      if (!silent && !confirm(`Unggah ${santriList.length} data santri dan ${txList.length} transaksi dari perangkat ini ke Cloud? Data dengan ID sama di Cloud akan diperbarui.`)) {
+      if (!silent && !confirm(`Unggah ${santriList.length} data santri dan ${txList.length} transaksi dari perangkat ini ke Google Sheets? Data di Sheets pada Ruang ini akan diperbarui.`)) {
         return;
       }
-      const roomPath = `keuangan_santri/${sanitizeRoomId(cloudConfig.roomId)}`;
-      const updates = {};
-      santriList.forEach(s => { updates[`${roomPath}/santri/${s.id}`] = s; });
-      txList.forEach(t => { updates[`${roomPath}/tx/${t.id}`] = t; });
-      await update(ref(dbInstance), updates);
-      if (!silent) alert('Seluruh data lokal berhasil diunggah ke Cloud!');
+      const res = await sendToSheets({
+        action: 'syncAll',
+        santri: santriList,
+        tx: txList
+      });
+      if (!silent && res && res.status === 'success') {
+        alert('Seluruh data lokal berhasil diunggah ke Google Sheets!');
+      }
     }
 
     // ==================== PARSER & MODAL CLOUD SYNC ====================
-    function parseFirebaseRawSnippet(raw) {
-      const extract = (key) => {
-        const rx = new RegExp(`["']?${key}["']?\\s*:\\s*["']([^"']+)["']`);
-        const m = raw.match(rx);
-        return m ? m[1].trim() : '';
-      };
-      return {
-        apiKey: extract('apiKey'),
-        databaseURL: extract('databaseURL'),
-        projectId: extract('projectId'),
-        authDomain: extract('authDomain'),
-        appId: extract('appId')
-      };
+    function extractWebAppUrl(raw) {
+      const m = String(raw || '').match(/https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec/);
+      return m ? m[0].trim() : '';
     }
 
-    document.getElementById('cfgRawFirebase').addEventListener('input', (e) => {
-      const parsed = parseFirebaseRawSnippet(e.target.value);
-      if (parsed.databaseURL) document.getElementById('cfgDatabaseUrl').value = parsed.databaseURL;
-      if (parsed.apiKey) document.getElementById('cfgApiKey').value = parsed.apiKey;
-    });
+    const rawCfgEl = document.getElementById('cfgRawFirebase');
+    if (rawCfgEl) {
+      rawCfgEl.addEventListener('input', (e) => {
+        const foundUrl = extractWebAppUrl(e.target.value);
+        if (foundUrl) document.getElementById('cfgDatabaseUrl').value = foundUrl;
+      });
+    }
 
     function openCloudModal() {
       if (cloudConfig) {
-        document.getElementById('cfgRoomId').value = cloudConfig.roomId || '';
+        document.getElementById('cfgRoomId').value = cloudConfig.roomId || 'default-pondok';
         document.getElementById('cfgDatabaseUrl').value = cloudConfig.databaseURL || '';
-        document.getElementById('cfgApiKey').value = cloudConfig.apiKey || '';
+        if (document.getElementById('cfgApiKey')) {
+          document.getElementById('cfgApiKey').value = cloudConfig.apiKey || '';
+        }
       }
       document.getElementById('cloudSyncModal').classList.remove('hidden');
       document.getElementById('cloudSyncModal').classList.add('flex');
@@ -1055,25 +1068,19 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
 
     async function handleConnectCloud(e) {
       e.preventDefault();
-      const roomId = sanitizeRoomId(document.getElementById('cfgRoomId').value);
-      const raw = document.getElementById('cfgRawFirebase').value;
-      const parsed = parseFirebaseRawSnippet(raw);
+      const roomId = sanitizeRoomId(document.getElementById('cfgRoomId').value || 'default-pondok');
+      const rawUrl = document.getElementById('cfgDatabaseUrl').value.trim();
+      const extracted = extractWebAppUrl(rawUrl) || extractWebAppUrl(document.getElementById('cfgRawFirebase')?.value || '');
+      const databaseURL = (extracted || rawUrl).replace(/\/$/, '');
 
-      const databaseURL = document.getElementById('cfgDatabaseUrl').value.trim().replace(/\/$/, '');
-      const apiKey = document.getElementById('cfgApiKey').value.trim();
-
-      if (!roomId || !databaseURL || !apiKey) {
-        alert('Lengkapi ID Ruang, Database URL, dan API Key terlebih dahulu.');
+      if (!databaseURL || !databaseURL.startsWith('https://')) {
+        alert('Masukkan URL Web App Google Apps Script (berakhiran /exec) yang valid.');
         return;
       }
 
       cloudConfig = {
         roomId,
-        databaseURL,
-        apiKey,
-        projectId: parsed.projectId || '',
-        authDomain: parsed.authDomain || '',
-        appId: parsed.appId || ''
+        databaseURL
       };
       localStorage.setItem('santri_cloud_cfg', JSON.stringify(cloudConfig));
       await initCloudSync(cloudConfig, true);
@@ -1081,9 +1088,11 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
     }
 
     async function disconnectCloud() {
-      if (!confirm('Putuskan koneksi Cloud Sync dan kembali ke Mode Lokal pada perangkat ini?')) return;
-      if (unsubscribeSantri) { unsubscribeSantri(); unsubscribeSantri = null; }
-      if (unsubscribeTx) { unsubscribeTx(); unsubscribeTx = null; }
+      if (!confirm('Putuskan koneksi Google Sheets dan kembali ke Mode Lokal pada perangkat ini?')) return;
+      if (syncTimer) {
+        clearInterval(syncTimer);
+        syncTimer = null;
+      }
       localStorage.removeItem('santri_cloud_cfg');
       cloudConfig = null;
       isCloudConnected = false;
@@ -1092,14 +1101,14 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
     }
 
     function copyShareSyncLink() {
-      if (!cloudConfig) return;
+      if (!cloudConfig || !cloudConfig.databaseURL) return;
       const encoded = btoa(encodeURIComponent(JSON.stringify(cloudConfig)));
       const baseUrl = window.location.href.split('#')[0].split('?')[0];
       const shareUrl = `${baseUrl}#sync=${encoded}`;
 
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(shareUrl).then(() => {
-          alert('Link Auto-Sync berhasil disalin!\n\nKirim link ini ke HP Pengurus atau Laptop Bendahara lain. Saat dibuka, perangkat tersebut akan otomatis terhubung ke Ruang Cloud yang sama.');
+          alert('Link Auto-Sync Google Sheets berhasil disalin!\n\nKirim link ini ke HP Pengurus atau Laptop Bendahara lain. Saat dibuka, perangkat tersebut akan otomatis terhubung ke Google Sheets yang sama.');
         }).catch(() => {
           prompt('Salin link Auto-Sync berikut untuk perangkat lain:', shareUrl);
         });
@@ -1114,8 +1123,11 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
         try {
           const encoded = hash.replace('#sync=', '');
           const decoded = JSON.parse(decodeURIComponent(atob(encoded)));
-          if (decoded.databaseURL && decoded.apiKey && decoded.roomId) {
-            cloudConfig = decoded;
+          if (decoded.databaseURL) {
+            cloudConfig = {
+              roomId: sanitizeRoomId(decoded.roomId || 'default-pondok'),
+              databaseURL: decoded.databaseURL
+            };
             localStorage.setItem('santri_cloud_cfg', JSON.stringify(cloudConfig));
             history.replaceState(null, '', window.location.pathname + window.location.search);
           }
@@ -1359,15 +1371,14 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
       });
 
       if (addedCount > 0) {
-        if (isCloudConnected && dbInstance && cloudConfig) {
-          const roomPath = `keuangan_santri/${sanitizeRoomId(cloudConfig.roomId)}`;
-          const updates = {};
-          newSantris.forEach(s => { updates[`${roomPath}/santri/${s.id}`] = s; });
-          newTxs.forEach(t => { updates[`${roomPath}/tx/${t.id}`] = t; });
-          await update(ref(dbInstance), updates);
-        } else {
-          saveLocalCache();
-          render();
+        saveLocalCache();
+        render();
+        if (cloudConfig && cloudConfig.databaseURL) {
+          await sendToSheets({
+            action: 'addSantriBatch',
+            santri: newSantris,
+            tx: newTxs
+          });
         }
       }
       return addedCount;
@@ -1762,6 +1773,59 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
       reader.readAsText(event.target.files[0]);
     }
 
+    // ==================== ALAT BANTU TAMPILAN ====================
+    let santriFilter = 'semua';
+    function syncSeg() {
+      const acc = document.getElementById('txAccount').value;
+      const typ = document.getElementById('txType');
+      document.querySelectorAll('#segAcc button').forEach(b => b.classList.toggle('on', b.dataset.v === acc));
+      document.querySelectorAll('#segType button').forEach(b => { b.classList.toggle('on', b.dataset.v === typ.value); b.disabled = typ.disabled; });
+    }
+    function pickAcc(v) { document.getElementById('txAccount').value = v; handleAccountChange(); syncSeg(); }
+    function pickType(v) { const t = document.getElementById('txType'); if (!t.disabled) t.value = v; syncSeg(); }
+    function quickTx(id) {
+      if (txTargetMode === 'all') pickAcc('jajan');
+      selectSantriFromDropdown(id);
+      document.getElementById('txForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    function setSantriFilter(f) {
+      santriFilter = f;
+      document.querySelectorAll('#santriChips button').forEach(b => b.classList.toggle('on', b.dataset.f === f));
+      renderSantriTable();
+    }
+
+    function addQuickAmount(nominal) {
+      const input = document.getElementById("txAmount");
+      if (!input) return;
+      const current = parseFloat(input.value) || 0;
+      input.value = current + Number(nominal);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      input.focus();
+    }
+
+    function resetQuickAmount() {
+      const amountInput = document.getElementById("txAmount");
+      if (!amountInput) return;
+      amountInput.value = "";
+      amountInput.dispatchEvent(new Event("input", { bubbles: true }));
+      amountInput.dispatchEvent(new Event("change", { bubbles: true }));
+      amountInput.focus();
+    }
+
+    // ==================== PENYESUAIAN MODAL UNTUK GOOGLE SHEETS ====================
+    function adaptCloudModalForSheets() {
+      const dbUrlEl = document.getElementById('cfgDatabaseUrl');
+      if (dbUrlEl) {
+        dbUrlEl.placeholder = 'https://script.google.com/macros/s/.../exec';
+      }
+      const apiKeyEl = document.getElementById('cfgApiKey');
+      if (apiKeyEl) {
+        apiKeyEl.removeAttribute('required');
+        apiKeyEl.placeholder = '(Tidak perlu diisi untuk Google Sheets)';
+      }
+    }
+
     // ==================== EXPOSE FUNCTIONS TO GLOBAL WINDOW ====================
     Object.assign(window, {
       setTxTargetMode,
@@ -1798,60 +1862,24 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
       handleConnectCloud,
       disconnectCloud,
       pushLocalDataToCloud,
-      copyShareSyncLink
+      copyShareSyncLink,
+      syncSeg,
+      pickAcc,
+      pickType,
+      quickTx,
+      setSantriFilter,
+      addQuickAmount,
+      resetQuickAmount
     });
 
-    // ==================== ALAT BANTU TAMPILAN BARU ====================
-    let santriFilter = 'semua';
-    function syncSeg() {
-      const acc = document.getElementById('txAccount').value;
-      const typ = document.getElementById('txType');
-      document.querySelectorAll('#segAcc button').forEach(b => b.classList.toggle('on', b.dataset.v === acc));
-      document.querySelectorAll('#segType button').forEach(b => { b.classList.toggle('on', b.dataset.v === typ.value); b.disabled = typ.disabled; });
-    }
-    function pickAcc(v) { document.getElementById('txAccount').value = v; handleAccountChange(); syncSeg(); }
-    function pickType(v) { const t = document.getElementById('txType'); if (!t.disabled) t.value = v; syncSeg(); }
-    function quickTx(id) {
-      if (txTargetMode === 'all') pickAcc('jajan');
-      selectSantriFromDropdown(id);
-      document.getElementById('txForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    function setSantriFilter(f) {
-      santriFilter = f;
-      document.querySelectorAll('#santriChips button').forEach(b => b.classList.toggle('on', b.dataset.f === f));
-      renderSantriTable();
-    }
-    Object.assign(window, { syncSeg, pickAcc, pickType, quickTx, setSantriFilter });
-
     // ==================== BOOTSTRAP APP ====================
+    adaptCloudModalForSheets();
     checkAutoSyncFromUrl();
     updateUndoUI();
     render();
-    if (cloudConfig) {
+    if (cloudConfig && cloudConfig.databaseURL) {
       initCloudSync(cloudConfig, false);
     }
-function addQuickAmount(nominal) {
-  const input = document.getElementById("txAmount");
-  if (!input) return;
-
-  const current = parseFloat(input.value) || 0;
-  input.value = current + Number(nominal);
-  input.dispatchEvent(new Event("input", { bubbles: true }));
-  input.dispatchEvent(new Event("change", { bubbles: true }));
-  input.focus();
-      }
-    function resetQuickAmount() {
-  const amountInput = document.getElementById("txAmount");
-  if (!amountInput) return;
-
-  amountInput.value = "";
-  amountInput.dispatchEvent(new Event("input", { bubbles: true }));
-  amountInput.dispatchEvent(new Event("change", { bubbles: true }));
-  amountInput.focus();
-}
-    window.addQuickAmount = addQuickAmount;
-    window.resetQuickAmount = resetQuickAmount;
-
   </script>
 </body>
 </html>
