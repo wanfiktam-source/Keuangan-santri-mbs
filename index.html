@@ -1841,7 +1841,7 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
       input.value = current + Number(nominal);
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));
-      input.focus();
+      input.blur();
     }
 
     function resetQuickAmount() {
@@ -1850,7 +1850,7 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
       amountInput.value = "";
       amountInput.dispatchEvent(new Event("input", { bubbles: true }));
       amountInput.dispatchEvent(new Event("change", { bubbles: true }));
-      amountInput.focus();
+      amountInput.blur();
     }
 
     // ==================== PENYESUAIAN MODAL UNTUK GOOGLE SHEETS ====================
