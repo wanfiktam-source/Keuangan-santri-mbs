@@ -96,14 +96,14 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
     </div>
   </div>
 
- <!-- Toast Undo / Notifikasi Cepat -->
-  <div id="toastBar" class="hidden fixed bottom-4 left-4 right-20 sm:right-auto sm:bottom-5 sm:left-5 z-[60] bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3 text-xs sm:text-sm max-w-md">
-    <i class="fa-solid fa-circle-info text-emerald-400 text-base shrink-0"></i>
+  <!-- Toast Undo / Notifikasi Cepat -->
+  <div id="toastBar" class="hidden fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3 text-xs sm:text-sm max-w-md">
+    <i class="fa-solid fa-circle-info text-emerald-400 text-base"></i>
     <span id="toastMessage" class="flex-1">Aksi tersimpan.</span>
     <button id="toastUndoBtn" onclick="handleUndo()" class="hidden bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold px-2.5 py-1 rounded-lg text-xs shrink-0 transition">
       <i class="fa-solid fa-rotate-left"></i> Undo
     </button>
-    <button type="button" onclick="hideToast()" class="text-slate-400 hover:text-white shrink-0"><i class="fa-solid fa-xmark"></i></button>
+    <button onclick="hideToast()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
   </div>
 
   <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
@@ -212,67 +212,24 @@ slate:{50:"#F5F8F6",100:"#EAF0ED",200:"#DCE5E0",300:"#C3D0C9",400:"#8FA39A",500:
             </div>
 
             <div>
-                          <div>
-              <div class="flex items-center justify-between mb-1">
-                <label class="block text-xs font-medium text-slate-700" id="lblTxAmount">Nominal (Rp)</label>
-                <button
-                  type="button"
-                  id="toggleTxNumpadBtn"
-                  onclick="toggleTxNumpad()"
-                  class="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 underline underline-offset-2"
-                >
-                  Sembunyikan Numpad
-                </button>
-              </div>
-              <input
-                type="text"
-                id="txAmount"
-                min="1"
-                required
-                inputmode="none"
-                readonly
-                placeholder="0"
-                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 text-base font-bold text-slate-800"
-              >
-
-              <!-- Chip Nominal Cepat (Akumulatif) -->
-              <div class="flex flex-wrap items-center gap-1.5 mt-2">
-                <button type="button" onclick="addQuickAmount(1000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-800 text-slate-700 text-xs font-bold transition select-none touch-manipulation">+1rb</button>
-                <button type="button" onclick="addQuickAmount(10000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-800 text-slate-700 text-xs font-bold transition select-none touch-manipulation">+10rb</button>
-                <button type="button" onclick="addQuickAmount(50000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-800 text-slate-700 text-xs font-bold transition select-none touch-manipulation">+50rb</button>
-                <button type="button" onclick="addQuickAmount(100000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-800 text-slate-700 text-xs font-bold transition select-none touch-manipulation">+100rb</button>
-                <button type="button" onclick="resetQuickAmount()" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold transition select-none touch-manipulation">Reset</button>
-              </div>
-
-              <!-- NUMPAD VIRTUAL TRANSAKSI SANTRI -->
-              <div id="txNumpadGrid" class="grid grid-cols-4 gap-1.5 mt-2 p-2 bg-slate-50 border border-slate-200 rounded-xl select-none">
-                <button type="button" onclick="appendTxNumpad('7')" class="py-2 rounded-lg bg-white hover:bg-emerald-50 active:bg-emerald-100 border border-slate-200 text-slate-800 text-sm font-bold shadow-2xs transition active:scale-95 touch-manipulation">7</button>
-                <button type="button" onclick="appendTxNumpad('8')" class="py-2 rounded-lg bg-white hover:bg-emerald-50 active:bg-emerald-100 border border-slate-200 text-slate-800 text-sm font-bold shadow-2xs transition active:scale-95 touch-manipulation">8</button>
-                <button type="button" onclick="appendTxNumpad('9')" class="py-2 rounded-lg bg-white hover:bg-emerald-50 active:bg-emerald-100 border border-slate-200 text-slate-800 text-sm font-bold shadow-2xs transition active:scale-95 touch-manipulation">9</button>
-                <button type="button" onclick="backspaceTxNumpad()" title="Hapus 1 digit" class="py-2 rounded-lg bg-amber-50 hover:bg-amber-100 active:bg-amber-200 border border-amber-200 text-amber-800 text-sm font-bold transition active:scale-95 touch-manipulation">⌫</button>
-
-                <button type="button" onclick="appendTxNumpad('4')" class="py-2 rounded-lg bg-white hover:bg-emerald-50 active:bg-emerald-100 border border-slate-200 text-slate-800 text-sm font-bold shadow-2xs transition active:scale-95 touch-manipulation">4</button>
-                <button type="button" onclick="appendTxNumpad('5')" class="py-2 rounded-lg bg-white hover:bg-emerald-50 active:bg-emerald-100 border border-slate-200 text-slate-800 text-sm font-bold shadow-2xs transition active:scale-95 touch-manipulation">5</button>
-                <button type="button" onclick="appendTxNumpad('6')" class="py-2 rounded-lg bg-white hover:bg-emerald-50 active:bg-emerald-100 border border-slate-200 text-slate-800 text-sm font-bold shadow-2xs transition active:scale-95 touch-manipulation">6</button>
-                <button type="button" onclick="clearTxNumpad()" title="Kosongkan nominal" class="py-2 rounded-lg bg-rose-50 hover:bg-rose-100 active:bg-rose-200 border border-rose-200 text-rose-600 text-xs font-bold transition active:scale-95 touch-manipulation">C</button>
-
-                <button type="button" onclick="appendTxNumpad('1')" class="py-2 rounded-lg bg-white hover:bg-emerald-50 active:bg-emerald-100 border border-slate-200 text-slate-800 text-sm font-bold shadow-2xs transition active:scale-95 touch-manipulation">1</button>
-                <button type="button" onclick="appendTxNumpad('2')" class="py-2 rounded-lg bg-white hover:bg-emerald-50 active:bg-emerald-100 border border-slate-200 text-slate-800 text-sm font-bold shadow-2xs transition active:scale-95 touch-manipulation">2</button>
-                <button type="button" onclick="appendTxNumpad('3')" class="py-2 rounded-lg bg-white hover:bg-emerald-50 active:bg-emerald-100 border border-slate-200 text-slate-800 text-sm font-bold shadow-2xs transition active:scale-95 touch-manipulation">3</button>
-                <button type="button" onclick="appendTxNumpad('000')" class="py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 border border-emerald-200 text-emerald-800 text-xs font-bold transition active:scale-95 touch-manipulation">000</button>
-
-                <button type="button" onclick="appendTxNumpad('0')" class="col-span-2 py-2 rounded-lg bg-white hover:bg-emerald-50 active:bg-emerald-100 border border-slate-200 text-slate-800 text-sm font-bold shadow-2xs transition active:scale-95 touch-manipulation">0</button>
-                <button type="button" onclick="appendTxNumpad('00')" class="col-span-2 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 active:bg-slate-300 border border-slate-200 text-slate-700 text-xs font-bold transition active:scale-95 touch-manipulation">00</button>
-              </div>
-            </div>
+              <label class="block text-xs font-medium text-slate-700 mb-1" id="lblTxAmount">Nominal (Rp)</label>
+              <input type="number" id="txAmount" min="1" required placeholder="0" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm">
+            
+<!-- Chip Nominal Cepat -->
+  <div class="flex flex-wrap items-center gap-1.5 mt-2">
+    <button type="button" onclick="addQuickAmount(1000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-800 text-slate-700 text-xs font-bold transition">+1rb</button>
+    <button type="button" onclick="addQuickAmount(10000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-800 text-slate-700 text-xs font-bold transition">+10rb</button>
+    <button type="button" onclick="addQuickAmount(50000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-800 text-slate-700 text-xs font-bold transition">+50rb</button>
+    <button type="button" onclick="addQuickAmount(100000)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-800 text-slate-700 text-xs font-bold transition">+100rb</button>
+    <button type="button" onclick="resetQuickAmount()" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold transition">Reset</button>
+  </div>
 </div>
             <div>
               <label class="block text-xs font-medium text-slate-700 mb-1">Keterangan / Keperluan</label>
-              <input type="text" id="txNote" placeholder="Contoh: Jajan, Nabung, Kas Bulanan" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm">
+              <input type="text" id="txNote" placeholder="Contoh: Jajan, Nabung" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm">
             </div>
 
-            <div class="flex flex-wrap gap-1.5 -mt-1"><button type="button" class="chip" onclick="const i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Jajan</button><button type="button" class="chip" onclick="const i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Cash</button><button type="button" class="chip" onclick="const i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Kas</button><button type="button" class="chip" onclick="const              i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Jastip</button><button type="button" class="chip" onclick="const
-i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari saldo</button><button type="button" class="chip" onclick="const i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari tbungan</button><button type="button" class="chip" onclick="const i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Minsoc/futsal</button></div>
+            <div class="flex flex-wrap gap-1.5 -mt-1"><button type="button" class="chip" onclick="const i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Jajan</button><button type="button" class="chip" onclick="const i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Kantin</button><button type="button" class="chip" onclick="const i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Setoran</button><button type="button" class="chip" onclick="const i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Kas mingguan</button><button type="button" class="chip" onclick="const i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Mini soccer</button></div>
 
             <button type="submit" id="btnSubmitTx" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg shadow transition text-sm flex items-center justify-center gap-2">
               <i class="fa-solid fa-floppy-disk"></i> Simpan Transaksi
@@ -444,7 +401,7 @@ i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari sal
                   <th class="py-3 px-4">Jenis</th>
                   <th class="py-3 px-4 text-right">Nominal</th>
                   <th class="py-3 px-4">Keterangan</th>
-                  <th class="py-3 px-4 text-center">Aksi</th>
+                  <th class="py-3 px-4 text-center">Hapus</th>
                 </tr>
               </thead>
               <tbody id="txTableBody" class="divide-y divide-slate-100">
@@ -487,16 +444,14 @@ i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari sal
     </div>
   </div>
 
- <!-- Modal Pengaturan Cloud Sync (Google Sheets / Apps Script) -->
-  <div id="cloudSyncModal" onclick="if(event.target === this) closeCloudModal()" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4 overflow-y-auto">
+  <!-- Modal Pengaturan Cloud Sync (Firebase Realtime Database) -->
+  <div id="cloudSyncModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4 overflow-y-auto">
     <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 my-8">
       <div class="flex justify-between items-center border-b pb-3">
         <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-          <i class="fa-solid fa-table text-emerald-600"></i> Pengaturan Sync Google Sheets
+          <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Pengaturan Cloud Sync Real-Time
         </h3>
-        <button type="button" onclick="closeCloudModal()" class="text-slate-400 hover:text-slate-700">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
+        <button onclick="closeCloudModal()" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
 
       <!-- Status Box -->
@@ -505,34 +460,43 @@ i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari sal
           <span>Status Koneksi Saat Ini:</span>
           <span id="modalCloudStatusLabel" class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">Mode Lokal (Offline)</span>
         </div>
-        <p class="text-slate-500">Gunakan <b>Google Sheets (Apps Script Web App)</b> agar data santri dan transaksi tersinkronisasi otomatis setiap 5 detik antar HP Pengurus, Tablet, dan Laptop Bendahara.</p>
+        <p class="text-slate-500">Gunakan <b>Firebase Realtime Database</b> (Gratis) agar data tersinkronisasi otomatis antar HP Pengurus, Tablet, dan Laptop Bendahara secara real-time.</p>
       </div>
 
-      <!-- Form Konfigurasi Google Sheets -->
-      <form onsubmit="handleConnectCloud(event)" class="space-y-3.5 text-xs">
+      <!-- Form Konfigurasi Firebase -->
+      <form onsubmit="handleConnectCloud(event)" class="space-y-3 text-xs">
         <div>
-          <label class="block font-semibold text-slate-700 mb-1">1. ID Ruang / Nama Pondok (Tanpa spasi)</label>
-          <input type="text" id="cfgRoomId" required placeholder="Contoh: default-pondok atau pondok-putra" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 font-mono">
-          <p class="text-[11px] text-slate-400 mt-0.5">Perangkat dengan ID Ruang & URL Web App yang sama akan membaca dan menyimpan ke sheet yang sama.</p>
+          <label class="block font-semibold text-slate-700 mb-1">1. ID Ruang / Nama Pondok (Bebas, tanpa spasi)</label>
+          <input type="text" id="cfgRoomId" required placeholder="Contoh: pondok-alikhlas-putra" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 font-mono">
+          <p class="text-[11px] text-slate-400 mt-0.5">Semua perangkat dengan ID Ruang & Firebase yang sama akan melihat dan mengedit data yang sama.</p>
         </div>
 
         <div>
-          <label class="block font-semibold text-slate-700 mb-1">2. URL Web App Google Apps Script</label>
-          <input type="url" id="cfgDatabaseUrl" required placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 font-mono text-[11px] bg-white">
-          <p class="text-[11px] text-slate-400 mt-0.5">Pastikan URL berakhiran <code class="px-1 py-0.5 bg-slate-100 rounded">/exec</code> dari hasil deploy Web App.</p>
+          <label class="block font-semibold text-slate-700 mb-1">2. Paste Konfigurasi Firebase (`firebaseConfig`)</label>
+          <textarea id="cfgRawFirebase" rows="4" placeholder='Paste seluruh blok const firebaseConfig = { apiKey: "...", databaseURL: "https://...-default-rtdb.firebaseio.com", ... } dari Firebase Console' class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 font-mono text-[11px]"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="block font-medium text-slate-600 mb-1">Database URL (Otomatis terisi)</label>
+            <input type="url" id="cfgDatabaseUrl" required placeholder="https://xxx-default-rtdb.asia-southeast1.firebasedatabase.app" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg font-mono text-[11px] bg-slate-50">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-600 mb-1">API Key (Otomatis terisi)</label>
+            <input type="text" id="cfgApiKey" required placeholder="AIzaSy..." class="w-full px-3 py-1.5 border border-slate-300 rounded-lg font-mono text-[11px] bg-slate-50">
+          </div>
         </div>
 
         <!-- Panduan Singkat Collapsible -->
-        <details class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-[11px] text-emerald-950">
+        <details class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-900">
           <summary class="font-bold cursor-pointer select-none">
-            <i class="fa-solid fa-circle-question text-emerald-600"></i> Cara Mendapatkan URL Web App Google Sheets
+            <i class="fa-solid fa-circle-question text-amber-600"></i> Cara Mendapatkan Firebase Config Gratis (2 Menit)
           </summary>
-          <ol class="list-decimal ml-4 mt-2 space-y-1 text-emerald-900">
-            <li>Buka file <b>Google Sheets</b> database Anda, lalu klik menu <b>Ekstensi &rarr; Apps Script</b>.</li>
-            <li>Pastikan kode endpoint <code class="bg-white/70 px-1 rounded">doGet(e)</code> dan <code class="bg-white/70 px-1 rounded">doPost(e)</code> sudah tersimpan.</li>
-            <li>Klik <b>Terapkan (Deploy) &rarr; Deployment baru &rarr; Aplikasi Web</b>.</li>
-            <li>Atur <i>Jalankan sebagai</i> ke <b>Saya (Me)</b> dan <i>Yang memiliki akses</i> ke <b>Siapa saja (Anyone)</b>, lalu klik <b>Terapkan</b>.</li>
-            <li>Salin <b>URL Aplikasi Web</b> (<code class="bg-white/70 px-1 rounded">https://script.google.com/macros/s/.../exec</code>) dan tempel pada kolom di atas.</li>
+          <ol class="list-decimal ml-4 mt-2 space-y-1">
+            <li>Buka <b>console.firebase.google.com</b> lalu buat project baru (gratis).</li>
+            <li>Pilih menu <b>Build &rarr; Realtime Database &rarr; Create Database</b>, pilih lokasi (misal Singapore) dan mulai dalam <b>Test Mode</b>.</li>
+            <li>Salin URL database (`https://...firebasedatabase.app`).</li>
+            <li>Buka <b>Project Settings (ikon gerigi) &rarr; General &rarr; Your apps &rarr; Web (&lt;/&gt;)</b>, daftarkan aplikasi, lalu salin blok kode <code>firebaseConfig</code> dan tempel di kotak atas.</li>
           </ol>
         </details>
 
@@ -540,20 +504,20 @@ i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari sal
         <div class="flex flex-wrap justify-between items-center gap-2 pt-2 border-t">
           <div class="flex flex-wrap gap-2">
             <button type="button" id="btnPushLocalToCloud" onclick="pushLocalDataToCloud()" class="hidden px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition">
-              <i class="fa-solid fa-cloud-arrow-up"></i> Unggah Data Lokal ke Sheets
+              <i class="fa-solid fa-cloud-arrow-up"></i> Unggah Data Lokal ke Cloud
             </button>
             <button type="button" id="btnCopySyncLink" onclick="copyShareSyncLink()" class="hidden px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-lg transition">
               <i class="fa-solid fa-share-nodes"></i> Salin Link Perangkat Lain
             </button>
             <button type="button" id="btnDisconnectCloud" onclick="disconnectCloud()" class="hidden px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-semibold rounded-lg transition">
-              Putuskan Sync
+              Putuskan Cloud
             </button>
           </div>
 
           <div class="flex gap-2 ml-auto">
             <button type="button" onclick="closeCloudModal()" class="px-3.5 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Tutup</button>
-            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-xs">
-              <i class="fa-solid fa-plug"></i> Hubungkan Sheets
+            <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg shadow-xs">
+              <i class="fa-solid fa-plug"></i> Hubungkan Cloud
             </button>
           </div>
         </div>
@@ -561,10 +525,10 @@ i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari sal
     </div>
   </div>
 
-<!-- Google Sheets Sync + Logika Utama Aplikasi -->
+ <!-- Google Sheets Sync + Logika Utama Aplikasi -->
   <script>
     // Opsional: Isi URL Web App Google Apps Script di bawah ini jika ingin otomatis terhubung tanpa input lewat modal
-    const DEFAULT_SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbz9WZgWl4j3LB_cVUZoY9srTeMWsvXDlvAsEM-fS21wJXN8S4AtiNN5YvD4ycQ_KmypCg/exec";
+    const DEFAULT_SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzVXlxn1LxjaypqD8c3L0Ze6pAdaz1TGEAFXOmHPbLsKXJK7jgJ9RNc1KbTyK-Qy8eBVQ/exec";
     const DEFAULT_ROOM_ID = "default-pondok";
     const SYNC_INTERVAL_MS = 5000; // Auto-sync tiap 5 detik
 
@@ -621,13 +585,6 @@ i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari sal
       if (isNaN(d.getTime())) return '-';
       return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' +
              d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-    }
-
-    function toLocalDateTimeInputValue(isoStr) {
-      const d = new Date(isoStr);
-      if (isNaN(d.getTime())) return '';
-      const offsetMs = d.getTimezoneOffset() * 60000;
-      return new Date(d.getTime() - offsetMs).toISOString().slice(0, 16);
     }
 
     function saveLocalCache() {
@@ -1226,7 +1183,7 @@ i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari sal
       }
     }
 
-    // ==================== SIMPAN, EDIT & HAPUS TRANSAKSI ====================
+    // ==================== SIMPAN & HAPUS TRANSAKSI ====================
     async function handleSaveTx(e) {
       e.preventDefault();
       const account = document.getElementById('txAccount').value;
@@ -1310,95 +1267,6 @@ i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari sal
       document.getElementById('btnClearTxSantri').classList.add('hidden');
       await cloudAddTxBatch([newTx]);
       showToast(`Transaksi ${matchedSantri.name} tersimpan.`, true);
-    }
-
-    function handleEditTxAccountChange() {
-      const acc = document.getElementById('editTxAccount').value;
-      const typeEl = document.getElementById('editTxType');
-      if (acc === 'kas') {
-        typeEl.value = 'keluar';
-        typeEl.disabled = true;
-      } else {
-        typeEl.disabled = false;
-      }
-    }
-
-    function openEditTxModal(txId) {
-      const tx = txList.find(t => Number(t.id) === Number(txId));
-      if (!tx) return;
-
-      const selectSantri = document.getElementById('editTxSantriId');
-      const sortedSantri = [...santriList].sort((a, b) => a.name.localeCompare(b.name));
-      let optionsHtml = sortedSantri.map(s =>
-        `<option value="${s.id}" ${Number(s.id) === Number(tx.santriId) ? 'selected' : ''}>${escapeHtml(s.name)}</option>`
-      ).join('');
-
-      if (!sortedSantri.some(s => Number(s.id) === Number(tx.santriId))) {
-        optionsHtml = `<option value="${tx.santriId}" selected>Santri Dihapus (ID: ${tx.santriId})</option>` + optionsHtml;
-      }
-      selectSantri.innerHTML = optionsHtml;
-
-      document.getElementById('editTxId').value = tx.id;
-      document.getElementById('editTxAccount').value = tx.account || 'jajan';
-      document.getElementById('editTxType').value = tx.type || 'keluar';
-      handleEditTxAccountChange();
-
-      document.getElementById('editTxAmount').value = tx.amount;
-      document.getElementById('editTxDate').value = toLocalDateTimeInputValue(tx.date);
-      document.getElementById('editTxNote').value = tx.note || '';
-
-      const modal = document.getElementById('editTxModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
-
-    function closeEditTxModal() {
-      const modal = document.getElementById('editTxModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
-
-    async function handleSaveEditTx(e) {
-      e.preventDefault();
-      const txId = Number(document.getElementById('editTxId').value);
-      const txIndex = txList.findIndex(t => Number(t.id) === txId);
-      if (txIndex === -1) return;
-
-      const newSantriId = Number(document.getElementById('editTxSantriId').value);
-      const newAccount = document.getElementById('editTxAccount').value;
-      const newType = newAccount === 'kas' ? 'keluar' : document.getElementById('editTxType').value;
-      const newAmount = parseFloat(document.getElementById('editTxAmount').value);
-      const rawDate = document.getElementById('editTxDate').value;
-      const newNote = document.getElementById('editTxNote').value.trim();
-
-      if (!newAmount || newAmount <= 0) {
-        alert('Nominal transaksi harus lebih dari 0.');
-        return;
-      }
-
-      const targetSantri = santriList.find(s => Number(s.id) === newSantriId);
-      const santriName = targetSantri ? targetSantri.name : 'Santri';
-
-      pushUndoSnapshot(`Edit transaksi: ${santriName} (${formatRp(newAmount)})`);
-
-      const parsedDate = new Date(rawDate);
-      const finalIsoDate = isNaN(parsedDate.getTime()) ? txList[txIndex].date : parsedDate.toISOString();
-
-      txList[txIndex] = {
-        ...txList[txIndex],
-        santriId: newSantriId,
-        account: newAccount,
-        type: newType,
-        amount: newAmount,
-        date: finalIsoDate,
-        note: newNote || (newAccount === 'kas' ? 'Iuran Kas / Kegiatan' : (newType === 'masuk' ? 'Setoran' : 'Jajan'))
-      };
-
-      txList.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-      closeEditTxModal();
-      await syncFullStateToCloudIfConnected();
-      showToast(`Transaksi ${santriName} berhasil diperbarui.`, true);
     }
 
     async function deleteTx(id) {
@@ -1762,11 +1630,8 @@ i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari sal
             <td class="py-2.5 px-4 whitespace-nowrap"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${badgeStyle}">${typeLabel}</span></td>
             <td class="py-2.5 px-4 text-right font-semibold whitespace-nowrap ${color}">${isMasuk ? '+' : '-'}${formatRp(t.amount)}</td>
             <td class="py-2.5 px-4 text-slate-600">${escapeHtml(t.note)}</td>
-            <td class="py-2.5 px-4 text-center whitespace-nowrap space-x-1">
-              <button type="button" onclick="openEditTxModal(${t.id})" title="Edit Transaksi" class="text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded transition">
-                <i class="fa-solid fa-pen-to-square"></i>
-              </button>
-              <button type="button" onclick="deleteTx(${t.id})" title="Hapus Transaksi" class="text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 px-2 py-1 rounded transition">
+            <td class="py-2.5 px-4 text-center">
+              <button onclick="deleteTx(${t.id})" class="text-slate-400 hover:text-rose-600 transition">
                 <i class="fa-solid fa-xmark"></i>
               </button>
             </td>
@@ -1914,7 +1779,7 @@ i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari sal
       const acc = document.getElementById('txAccount').value;
       const typ = document.getElementById('txType');
       document.querySelectorAll('#segAcc button').forEach(b => b.classList.toggle('on', b.dataset.v === acc));
-      document.querySelectorAll('#segType button').forEach(b => b.classList.toggle('on', b.dataset.v === typ.value); b.disabled = typ.disabled; });
+      document.querySelectorAll('#segType button').forEach(b => { b.classList.toggle('on', b.dataset.v === typ.value); b.disabled = typ.disabled; });
     }
     function pickAcc(v) { document.getElementById('txAccount').value = v; handleAccountChange(); syncSeg(); }
     function pickType(v) { const t = document.getElementById('txType'); if (!t.disabled) t.value = v; syncSeg(); }
@@ -1936,7 +1801,7 @@ i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari sal
       input.value = current + Number(nominal);
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));
-      input.blur();
+      input.focus();
     }
 
     function resetQuickAmount() {
@@ -1945,7 +1810,7 @@ i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari sal
       amountInput.value = "";
       amountInput.dispatchEvent(new Event("input", { bubbles: true }));
       amountInput.dispatchEvent(new Event("change", { bubbles: true }));
-      amountInput.blur();
+      amountInput.focus();
     }
 
     // ==================== PENYESUAIAN MODAL UNTUK GOOGLE SHEETS ====================
@@ -1966,10 +1831,6 @@ i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari sal
       setTxTargetMode,
       handleAccountChange,
       handleSaveTx,
-      openEditTxModal,
-      closeEditTxModal,
-      handleSaveEditTx,
-      handleEditTxAccountChange,
       deleteTx,
       handleDeleteAllTx,
       handleUndo,
@@ -2019,278 +1880,6 @@ i=document.getElementById('txNote');i.value=this.textContent;i.focus()">Dari sal
     if (cloudConfig && cloudConfig.databaseURL) {
       initCloudSync(cloudConfig, false);
     }
-
-    // === FUNGSI NUMPAD NOMINAL TRANSAKSI SANTRI ===
-    function triggerTxAmountInputEvent(input) {
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-
-    function appendTxNumpad(digits) {
-      const input = document.getElementById('txAmount');
-      if (!input) return;
-
-      let current = String(input.value || '').replace(/\D/g, '');
-
-      if (current === '' || current === '0') {
-        current = (digits === '0' || digits === '00' || digits === '000') ? '' : digits;
-      } else if (current.length < 10) {
-        current += digits;
-      }
-
-      input.value = current;
-      triggerTxAmountInputEvent(input);
-    }
-
-    function backspaceTxNumpad() {
-      const input = document.getElementById('txAmount');
-      if (!input) return;
-
-      const current = String(input.value || '').replace(/\D/g, '');
-      input.value = current.length > 1 ? current.slice(0, -1) : '';
-      triggerTxAmountInputEvent(input);
-    }
-
-    function clearTxNumpad() {
-      const input = document.getElementById('txAmount');
-      if (!input) return;
-
-      input.value = '';
-      triggerTxAmountInputEvent(input);
-    }
-
-    function toggleTxNumpad() {
-      const grid = document.getElementById('txNumpadGrid');
-      const btn = document.getElementById('toggleTxNumpadBtn');
-      if (!grid || !btn) return;
-
-      const isHidden = grid.classList.toggle('hidden');
-      btn.textContent = isHidden ? 'Tampilkan Numpad' : 'Sembunyikan Numpad';
-    }
-
-    // === FUNGSI KALKULATOR MENGAMBANG ===
-    let calcRawExpr = "";
-
-    function toggleFloatingCalc() {
-      const box = document.getElementById("floatingCalcBox");
-      if (box) box.classList.toggle("hidden");
-    }
-
-    function updateCalcScreen() {
-      const display = document.getElementById("calcDisplay");
-      if (!display) return;
-      const pretty = calcRawExpr.replace(/\*/g, "×").replace(/\//g, "÷");
-      display.textContent = pretty || "0";
-    }
-
-    function calcInput(val) {
-      const operators = ["+", "-", "*", "/"];
-      const lastChar = calcRawExpr.slice(-1);
-
-      if (operators.includes(val)) {
-        if (calcRawExpr === "") return;
-        if (operators.includes(lastChar)) {
-          calcRawExpr = calcRawExpr.slice(0, -1) + val;
-          updateCalcScreen();
-          return;
-        }
-      } else if (calcRawExpr === "" && (val === "0" || val === "000")) {
-        return;
-      }
-
-      calcRawExpr += val;
-      updateCalcScreen();
-    }
-
-    function calcBackspace() {
-      calcRawExpr = calcRawExpr.slice(0, -1);
-      updateCalcScreen();
-    }
-
-    function calcClear() {
-      calcRawExpr = "";
-      const exprEl = document.getElementById("calcExpression");
-      if (exprEl) exprEl.textContent = "";
-      updateCalcScreen();
-    }
-
-    function calcCalculate() {
-      if (!calcRawExpr) return null;
-      const cleaned = calcRawExpr.replace(/[+\-*/]+$/, "");
-      if (!/^[0-9+\-*/.]+$/.test(cleaned)) return null;
-
-      try {
-        const result = Function('"use strict"; return (' + cleaned + ')')();
-        if (!isFinite(result) || isNaN(result)) return null;
-
-        const rounded = Math.round(result * 100) / 100;
-        const exprEl = document.getElementById("calcExpression");
-        if (exprEl) {
-          exprEl.textContent = cleaned.replace(/\*/g, "×").replace(/\//g, "÷") + " =";
-        }
-        calcRawExpr = String(rounded);
-        updateCalcScreen();
-        return rounded;
-      } catch (e) {
-        return null;
-      }
-    }
-
-    function applyCalcToTxAmount() {
-      const val = calcCalculate();
-      const finalAmount = val !== null ? Math.round(val) : parseInt(calcRawExpr, 10);
-
-      if (!finalAmount || finalAmount <= 0) return;
-
-      const txInput = document.getElementById("txAmount");
-      if (txInput) {
-        txInput.value = finalAmount;
-        txInput.dispatchEvent(new Event("input", { bubbles: true }));
-        txInput.dispatchEvent(new Event("change", { bubbles: true }));
-        txInput.blur();
-      }
-      toggleFloatingCalc();
-    }
   </script>
-
-  <!-- MODAL EDIT TRANSAKSI -->
-  <div id="editTxModal" onclick="if(event.target === this) closeEditTxModal()" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/55 backdrop-blur-xs p-4">
-    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
-      <!-- Header Modal -->
-      <div class="px-5 py-3.5 bg-emerald-700 text-white flex items-center justify-between">
-        <div class="flex items-center gap-2 font-bold text-sm">
-          <i class="fa-solid fa-pen-to-square"></i>
-          <span>Edit Transaksi</span>
-        </div>
-        <button type="button" onclick="closeEditTxModal()" class="w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-xs transition touch-manipulation">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <!-- Form Edit Transaksi -->
-      <form onsubmit="handleSaveEditTx(event)" class="p-5 space-y-3.5 text-xs">
-        <input type="hidden" id="editTxId">
-
-        <div>
-          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Nama Santri</label>
-          <select id="editTxSantriId" required class="w-full px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 text-sm font-medium focus:outline-none focus:border-emerald-600"></select>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Rekening</label>
-            <select id="editTxAccount" onchange="handleEditTxAccountChange()" required class="w-full px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 text-sm focus:outline-none focus:border-emerald-600">
-              <option value="jajan">Uang Jajan</option>
-              <option value="tabungan">Tabungan</option>
-              <option value="kas">Kas / Kegiatan</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Jenis Transaksi</label>
-            <select id="editTxType" required class="w-full px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-800 text-sm focus:outline-none focus:border-emerald-600 disabled:bg-slate-100 disabled:text-slate-400">
-              <option value="masuk">Masuk / Setor</option>
-              <option value="keluar">Keluar / Tarik</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Nominal (Rp)</label>
-          <input type="number" id="editTxAmount" min="1" step="any" required class="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-slate-900 font-bold text-base focus:outline-none focus:border-emerald-600">
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Tanggal & Waktu</label>
-          <input type="datetime-local" id="editTxDate" required class="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-slate-800 text-sm focus:outline-none focus:border-emerald-600">
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wide mb-1">Keterangan</label>
-          <input type="text" id="editTxNote" placeholder="Contoh: Jajan ust randa..." class="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-slate-800 text-sm focus:outline-none focus:border-emerald-600">
-        </div>
-
-        <div class="pt-2 flex justify-end gap-2">
-          <button type="button" onclick="closeEditTxModal()" class="px-4 py-2.5 rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold transition">
-            Batal
-          </button>
-          <button type="submit" class="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-xs transition flex items-center gap-1.5">
-            <i class="fa-solid fa-floppy-disk"></i>
-            <span>Simpan Perubahan</span>
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- WIDGET KALKULATOR MENGAMBANG -->
-  <div class="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2 select-none">
-    <!-- Jendela Kalkulator (Tersembunyi secara default) -->
-    <div id="floatingCalcBox" class="hidden w-64 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden">
-      <!-- Header -->
-      <div class="px-3.5 py-2.5 bg-emerald-700 text-white flex items-center justify-between">
-        <div class="flex items-center gap-1.5 text-xs font-bold">
-          <i class="fa-solid fa-calculator"></i>
-          <span>Kalkulator Cepat</span>
-        </div>
-        <button type="button" onclick="toggleFloatingCalc()" class="w-6 h-6 rounded-lg bg-white/15 hover:bg-white/25 flex items-center justify-center text-xs transition touch-manipulation">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <!-- Layar Angka -->
-      <div class="p-3 bg-slate-50 border-b border-slate-200 text-right">
-        <div id="calcExpression" class="text-[11px] text-slate-400 h-4 truncate font-mono"></div>
-        <div id="calcDisplay" class="text-xl font-extrabold text-slate-800 truncate font-mono">0</div>
-      </div>
-
-      <!-- Tombol Keypad -->
-      <div class="p-2.5 grid grid-cols-4 gap-1.5 bg-white">
-        <button type="button" onclick="calcClear()" class="py-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs transition active:scale-95 touch-manipulation">C</button>
-        <button type="button" onclick="calcBackspace()" class="py-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold text-xs transition active:scale-95 touch-manipulation"><i class="fa-solid fa-delete-left"></i></button>
-        <button type="button" onclick="calcInput('/')" class="py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-sm transition active:scale-95 touch-manipulation">÷</button>
-        <button type="button" onclick="calcInput('*')" class="py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-sm transition active:scale-95 touch-manipulation">×</button>
-
-        <button type="button" onclick="calcInput('7')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 text-slate-800 font-bold text-sm transition active:scale-95 touch-manipulation">7</button>
-        <button type="button" onclick="calcInput('8')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 text-slate-800 font-bold text-sm transition active:scale-95 touch-manipulation">8</button>
-        <button type="button" onclick="calcInput('9')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 text-slate-800 font-bold text-sm transition active:scale-95 touch-manipulation">9</button>
-        <button type="button" onclick="calcInput('-')" class="py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-sm transition active:scale-95 touch-manipulation">−</button>
-
-        <button type="button" onclick="calcInput('4')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 text-slate-800 font-bold text-sm transition active:scale-95 touch-manipulation">4</button>
-        <button type="button" onclick="calcInput('5')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 text-slate-800 font-bold text-sm transition active:scale-95 touch-manipulation">5</button>
-        <button type="button" onclick="calcInput('6')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 text-slate-800 font-bold text-sm transition active:scale-95 touch-manipulation">6</button>
-        <button type="button" onclick="calcInput('+')" class="py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-sm transition active:scale-95 touch-manipulation">+</button>
-
-        <button type="button" onclick="calcInput('1')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 text-slate-800 font-bold text-sm transition active:scale-95 touch-manipulation">1</button>
-        <button type="button" onclick="calcInput('2')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 text-slate-800 font-bold text-sm transition active:scale-95 touch-manipulation">2</button>
-        <button type="button" onclick="calcInput('3')" class="py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 text-slate-800 font-bold text-sm transition active:scale-95 touch-manipulation">3</button>
-        <button type="button" onclick="calcCalculate()" class="row-span-2 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base shadow-xs transition active:scale-95 touch-manipulation">=</button>
-
-        <button type="button" onclick="calcInput('0')" class="col-span-2 py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200/70 text-slate-800 font-bold text-sm transition active:scale-95 touch-manipulation">0</button>
-        <button type="button" onclick="calcInput('000')" class="py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition active:scale-95 touch-manipulation">000</button>
-      </div>
-
-      <!-- Tombol Kirim ke Input Nominal -->
-      <div class="px-2.5 pb-2.5 bg-white">
-        <button
-          type="button"
-          onclick="applyCalcToTxAmount()"
-          class="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95 touch-manipulation"
-        >
-          <i class="fa-solid fa-check"></i>
-          <span>Pakai Hasil ke Nominal</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Tombol Bulat Mengambang -->
-    <button
-      type="button"
-      onclick="toggleFloatingCalc()"
-      title="Buka/Tutup Kalkulator"
-      class="w-12 h-12 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-900/25 flex items-center justify-center text-lg transition active:scale-95 touch-manipulation"
-    >
-      <i class="fa-solid fa-calculator"></i>
-    </button>
-  </div>
-
 </body>
 </html>
